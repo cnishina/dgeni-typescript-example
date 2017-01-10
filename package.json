@@ -1,0 +1,20 @@
+{
+  "name": "dgeni-typescript-example",
+  "version": "1.0.0",
+  "description": "try out dgeni with typescript",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cnishina/dgeni-typescript-example.git"
+  },
+  "author": "Craig Nishina <craig.nishina@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cnishina/dgeni-typescript-example/issues"
+  },
+  "homepage": "https://github.com/cnishina/dgeni-typescript-example#readme",
+  "dependencies": {
+    "dgeni": "^0.4.2",
+    "dgeni-packages": "^0.16.4",
+    "typescript": "^2.1.4"
+  }
+}
