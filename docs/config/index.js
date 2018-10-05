@@ -18,18 +18,27 @@ module.exports = new Package('myDoc', [
 /**
  * Setup the file reading and writing.
  */
-.config((log, readFilesProcessor, writeFilesProcessor) => {
+.config(function(log, readFilesProcessor, writeFilesProcessor) {
   // Set the log level to 'info', switch to 'debug' when troubleshooting.
-  log.level = 'info';
+  log.level = 'debug';
 
   // Specify the base path used when resolving relative paths to source and
   // output files.
   readFilesProcessor.basePath = path.resolve(packagePath, '../..');
 
   // Specify our source files that we want to extract (all the app files).
-  readFilesProcessor.sourceFiles = [
-      { include: 'src/app/**/**/*.js', basePath: 'src/app' },
-  ];
+  readFilesProcessor.sourceFiles = [ {
+    // An attempt to read TypeScript
+    include: 'src/lib/**/*.ts',
+    basePath: 'src/lib',
+    fileReader: 'ngdocFileReader'
+  }, {
+    // Our static Markdown documents. We are specifying the path and telling
+    // Dgeni to use the ngdocFileReader to parse the Markdown files to HTMLs.
+    include: 'docs/content/**/*.md',
+    basePath: 'docs/content',
+    fileReader: 'ngdocFileReader'
+  } ];
 
   // Use the writeFilesProcessor to specify the output folder for the extracted
   // files.
@@ -39,7 +48,7 @@ module.exports = new Package('myDoc', [
 /**
  * Setup the templates.
  */
-.config((templateFinder) => {
+.config(function(templateFinder) {
   // Specify where the templates are located
   templateFinder.templateFolders.unshift(
     path.resolve(packagePath, 'templates'));
@@ -48,25 +57,25 @@ module.exports = new Package('myDoc', [
 /**
  * Setup the Dgeni processors.
  */
-.config((computePathsProcessor) => {
-  // Here we are defining what to output for our docType Module.
-  //
-  // Each angular module will be extracted to it's own partial and will act as
-  // a container for the various Components, Controllers, Services in that
-  // Module. We are basically specifying where we want the output files to be
-  // located.
-  computePathsProcessor.pathTemplates.push({
-      docTypes: ['module'],
-      pathTemplate: '${area}/${name}',
-      outputPathTemplate: 'partials/${area}/${name}.html'
+.config(function(computePathsProcessor, computeIdsProcessor) {
+  // create new compute for 'content' type doc
+  // indexPage is something new we will be defining later
+  computeIdsProcessor.idTemplates.push({
+    docTypes: ['content', 'indexPage'],
+    getId: function(doc) { return doc.fileInfo.baseName; },
+    getAliases: function(doc) { return [doc.id]; }
   });
 
-  // Doing the same thing but for regular types like Services, Controllers,
-  // etc... By default they are grouped in a componentGroup and processed
-  // via the generateComponentGroupsProcessor internally in Dgeni
+  // Build custom paths and set the outputPaths for "content" pages
   computePathsProcessor.pathTemplates.push({
-      docTypes: ['componentGroup'],
-      pathTemplate: '${area}/${moduleName}/${groupType}',
-      outputPathTemplate: 'partials/${area}/${moduleName}/${groupType}.html'
+    docTypes: ['content'],
+    getPath: function(doc) {
+        var docPath = path.dirname(doc.fileInfo.relativePath);
+        if (doc.fileInfo.baseName !== 'index') {
+            docPath = path.join(docPath, doc.fileInfo.baseName);
+        }
+        return docPath;
+    },
+    outputPathTemplate: 'partials/${path}.html'
   });
 })
